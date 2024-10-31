@@ -1,0 +1,64 @@
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{fontspec}
+\selectcolormodel{rgb}
+\definecolor{pythonBackgroundColor}{cmyk}{0.00, 0.00, 0.00, 0.03}
+\definecolor{pythonBorderColor}{cmyk}{0.00, 0.58, 1.00, 0.00}
+\definecolor{pythonBaseColor}{cmyk}{0.00, 0.00, 0.00, 0.80}
+\definecolor{pythonKeywordColor}{cmyk}{0.00, 0.84, 0.78, 0.19}
+\definecolor{pythonStringColor}{cmyk}{0.00, 0.00, 0.00, 1.00}
+\definecolor{pythonParameterColor}{cmyk}{0.81, 0.45, 0.00, 0.12}
+\definecolor{pythonFunctionColor}{cmyk}{0.62, 0.92, 0.00, 0.41}
+\definecolor{pythonCallColor}{cmyk}{0.98, 0.54, 0.00, 0.31}
+\definecolor{pythonAttributeColor}{cmyk}{0.98, 0.54, 0.00, 0.31}
+\definecolor{pythonNumberColor}{cmyk}{0.81, 0.45, 0.00, 0.12}
+\definecolor{pythonCommentColor}{cmyk}{0.00, 0.00, 0.00, 0.40}
+\definecolor{pythonOperatorColor}{cmyk}{0.30, 0.09, 0.00, 0.66}
+\definecolor{pythonDecoratorColor}{cmyk}{0.39, 0.60, 0.00, 0.12}
+\lstdefinestyle{pythonStyle}{
+backgroundcolor=\color{pythonBackgroundColor}, % change this to change the background color
+commentstyle=\color{pythonCommentColor}, % change this to change the color for comment
+keywordstyle=\color{pythonKeywordColor}, % change this to change the color for keywords
+stringstyle=\color{pythonStringColor}, % change this to change the color for strings
+basicstyle=\linespread{0.60}\color{pythonBaseColor}\ttfamily\footnotesize, % here you change the line height, the color of all default texts, and the font family as well as the size
+breakatwhitespace=false, % false means line will break on white space and special characters, set it to true to only break at white space
+breaklines=true, % sets automatic line breaking
+captionpos=b, % sets the caption position to bottom
+keepspaces=true, % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+numbers=none, % where to put the line-numbers; possible values are (none, left, right)
+numbersep=5pt, % how far the line-numbers are from the code
+showspaces=false, % do we indicate spaces
+showstringspaces=false, % do we indicate spaces in strings
+showtabs=false, % do we indicate tabs within strings
+tabsize=4, % sets default tabsize to 4 spaces
+xleftmargin=0pt, % sets the margin on left side
+otherkeywords={}, % add to this list if you want to add other keywords
+moredelim=[is][\color{pythonParameterColor}]{|@}{@|},  % Anything between |@ @| strings will have parameter color
+moredelim=[is][\color{pythonFunctionColor}]{*|}{|*},  % Anything between *| |* strings will have function color
+moredelim=[is][\color{pythonCallColor}]{|!}{!|},  % Anything between |! !| strings will have call color
+moredelim=[is][\color{pythonAttributeColor}]{|?}{?|},  % Anything between |? ?| strings will have attribute color
+moredelim=[is][\color{pythonNumberColor}]{?@}{@?},  % Anything between ?@ @? strings will have number color
+moredelim=[is][\color{pythonOperatorColor}]{@*}{*@},  % Anything between @* *@ strings will have operator color
+moredelim=[is][\color{pythonDecoratorColor}]{?*}{*?},  % Anything between ?* *? strings will have decorator color
+moredelim=[is][\color{pythonKeywordColor}]{!@}{@!},  % Anything between !@ @! strings will have keyword color
+emph={}, % add to this list to change color for emphasized text
+emphstyle=\color{pythonKeywordColor}, % change this to change the color for emphasized text
+literate=%
+}
+
+\newtcblisting{pythonBlock}[1]{%boxsep=0pt, % sets the padding of the box
+boxrule=0.88pt, % sets the border width
+arc=3.11pt, % sets the border radius
+auto outer arc, % sets the border radius to be the same as the arc
+colframe=pythonBorderColor, % sets the border color
+colback=pythonBackgroundColor, % sets the background color
+listing only, % only the listing will be colored
+listing options={language=Python, style=pythonStyle}, % sets the style of the listing
+title=#1, % sets the title of the box, you can leave it blank
+fonttitle=\bfseries, % sets the font of the title
+top=0pt, % sets the top margin
+bottom=0pt, % sets the bottom margin
+left=0pt, % sets the left margin
+right=0pt, % sets the right margin
+}
