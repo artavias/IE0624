@@ -1,23 +1,7 @@
-
-///*
-// * This file is part of the libopencm3 project.
-// *
-// * Copyright (C) 2014 Chuck McManis <cmcmanis@mcmanis.com>
-// *
-// * This library is free software: you can redistribute it and/or modify
-// * it under the terms of the GNU Lesser General Public License as published by
-// * the Free Software Foundation, either version 3 of the License, or
-// * (at your option) any later version.
-// *
-// * This library is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// * GNU Lesser General Public License for more details.
-// *
-// * You should have received a copy of the GNU Lesser General Public License
-// * along with this library.  If not, see <http://www.gnu.org/licenses/>.
-// */
-//
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/spi.h>
+#include <libopencm3/stm32/adc.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
@@ -27,31 +11,22 @@
 #include "lcd-spi.h"
 #include "gfx.h"
 
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/spi.h>
-
-/* Convert degrees to radians */
-#define d2r(d) ((d) * 6.2831853 / 360.0)
 
 uint16_t read_reg(int reg);
 void write_reg(uint8_t reg, uint8_t value);
+static uint16_t read_adc_naiive(uint8_t channel);
 
-void write_reg(uint8_t reg, uint8_t value)
-{
-
+void write_reg(uint8_t reg, uint8_t value){
 	gpio_clear(GPIOC, GPIO1); /* CS* select */
 	spi_send(SPI5, reg);
 	(void) spi_read(SPI5);
 	spi_send(SPI5, value);
 	(void) spi_read(SPI5);
 	gpio_set(GPIOC, GPIO1); /* CS* deselect */
-
 	return;
 }
 
-uint16_t read_reg(int reg)
-{
+uint16_t read_reg(int reg){
 	uint16_t d1, d2;
 	d1 = 0x80 | (reg & 0x3f); /* Read operation */
 	/* Nominallly a register read is a 16 bit operation */
@@ -70,20 +45,30 @@ uint16_t read_reg(int reg)
 	return d2;
 }
 
+static uint16_t read_adc_naiive(uint8_t channel){
+	uint8_t channel_array[16];
+	channel_array[0] = channel;
+	adc_set_regular_sequence(ADC1, 1, channel_array);
+	adc_start_conversion_regular(ADC1);
+	while (!adc_eoc(ADC1));
+	uint16_t reg16 = adc_read_regular(ADC1);
+	return reg16;
+}
 
 
-/*
- * This is our example, the heavy lifing is actually in lcd-spi.c but
- * this drives that code.
- */
 int main(void)
 {
-	uint16_t valor_X;
-	uint16_t valor_Y;
-	uint16_t valor_Z;
-	char str_X[8];
-	char str_Y[8];
-	char str_Z[8];
+	int valor_X=0;
+	int valor_Y=15;
+	int valor_Z=-2;
+	int bateria=0;
+	int counter=0;
+	int counter2=0;
+	char str_X[12];
+	char str_Y[12];
+	char str_Z[12];
+	char str_adc[12];
+	uint16_t input_adc0;
 
 	// Iniciar varios
 	clock_setup();
@@ -134,18 +119,75 @@ int main(void)
 	gfx_setTextSize(2);
 	gfx_fillScreen(LCD_BLACK);
 
+	// Configurar gpio para led
+	rcc_periph_clock_enable(RCC_GPIOG);
+	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO13);
+	// Configurar gpio para botón
+	rcc_periph_clock_enable(RCC_GPIOA);
+	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
+	
+	//Configurar led para notificar bateria baja
+	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO14);
+
+	// Configurar puerto ADC
+	rcc_periph_clock_enable(RCC_ADC1);
+	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO1);
+	adc_power_off(ADC1);
+	adc_disable_scan_mode(ADC1);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
+	adc_power_on(ADC1);
+
+
 	while (1) {
+
+		// Leer botón para ver si hay que activar la comunicación USART
+		if(gpio_get(GPIOA, GPIO0)){
+			gpio_toggle(GPIOG, GPIO13);
+		}
 	
 		// Leer registros de X, Y y Z
-		valor_X = read_reg(0x28);
-		valor_Y = read_reg(0x2A);
-		valor_Z = read_reg(0x2C);
+		// Estas lecturas se comentan porque parece que en la tarjeta no funciona el giroscopio
+		// así que mejor se simulan estos datos
+		//valor_X = read_reg(0x28);
+		//valor_Y = read_reg(0x2A);
+		//valor_Z = read_reg(0x2C);
+
+		//Se agrega un contador a modo de delay
+		counter++;
+		if (counter==10){
+			valor_X++;
+			valor_Y++;
+			valor_Z++;
+			if (valor_X>=20){
+				valor_X=-15;
+				valor_Y=-15;
+				valor_Z=-15;
+			}
+			counter=0;
+		}
 
 		// Convertir a String
-		sprintf(str_X, "%u", valor_X);
-		sprintf(str_Y, "%u", valor_Y);
-		sprintf(str_Z, "%u", valor_Z);
+		sprintf(str_X, "%d", valor_X);
+		sprintf(str_Y, "%d", valor_Y);
+		sprintf(str_Z, "%d", valor_Z);
 
+		//Leer datos de adc
+		bateria = read_adc_naiive(1)*9000/4095;
+		sprintf(str_adc, "%u", bateria);
+
+		//Encender led rojo si bateria < 7500
+		if (bateria < 7500){
+			if (counter2==4){
+				gpio_toggle(GPIOG, GPIO14);
+				counter2=0;
+			}
+		} 
+		if (bateria>7500){
+			gpio_clear(GPIOG, GPIO14);
+		}
+		counter2++;
+
+		gfx_fillScreen(LCD_BLACK);
 		// Escribir en pantalla
 		gfx_setCursor(15, 40);
 		gfx_puts("X: ");
@@ -159,6 +201,32 @@ int main(void)
 		gfx_puts("Z: ");
 		gfx_puts(str_Z);
 
+		gfx_setCursor(15, 160);
+		gfx_puts("Bat.: ");
+		gfx_puts(str_adc);
+
 		lcd_show_frame();
+
+		// Enviar datos a pc
+		if (gpio_get(GPIOG, GPIO13)){
+			console_puts("Valor X: ");
+			console_puts(str_X);
+			console_puts("\n");
+			
+			console_puts("Valor Y: ");
+			console_puts(str_Y);
+			console_puts("\n");
+		
+			console_puts("Valor Z: ");
+			console_puts(str_Z);
+			console_puts("\n");
+
+			console_puts("Bateria: ");
+			console_puts(str_adc);
+			console_puts("\n");
+		}
+
 	}
 }
+
+

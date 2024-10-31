@@ -22,6 +22,8 @@ def enviar_TB():
     valor_X = 0
     valor_Y = 0
     valor_Z = 0
+    bateria = 0
+    alarma = 0
     token = "eiCEzMR90IHO0grSHBia"
     host = "iot.eie.ucr.ac.cr"
     puerto = 1883
@@ -32,30 +34,29 @@ def enviar_TB():
     cliente.loop_start()
     while True:
         datos = puerto_serial.readline().decode('utf-8').rstrip()
+        print(datos)
 
         datos = datos.split(": ")
-        print(datos)
-        print("separador")
 
         if (datos[0] == "Valor X"):
             valor_X = int(datos[1])
-            print(datos[1])
         if (datos[0] == "\rValor Y"):
             valor_Y = int(datos[1])
-            print(datos[1])
         if (datos[0] == "\rValor Z"):
             valor_Z = int(datos[1])
-            print(datos[1])
+        if (datos[0] == "\rBateria"):
+            bateria = float(datos[1])/1000
+        if (bateria < 7500):
+            alarma = 1
+        if (bateria > 7500):
+            alarma = 0
         data = {
-            "nivelBateria": 60,
-            "humidity": 20,
+            "nivelBateria": bateria,
             "valorX": valor_X,
             "valorY": valor_Y,
-            "valorZ": valor_Z
+            "valorZ": valor_Z,
+            "alarm": alarma
         }
         cliente.publish(TOPIC, json.dumps(data))
-        # print(datos[1] + "\n")
-        # cliente.loop_start()
-
 
 enviar_TB()
