@@ -1,0 +1,27 @@
+Inferencia de actividad humana utilizando giroscopio
+
+gyrX Inicializacion de sensor de eje exitosa.
+gyrY Inicializacion de sensor de eje exitosa.
+gyrZ Inicializacion de sensor de eje exitosa.
+
+Comenzando inferencia en 1 segundo:
+Tomando muestras...
+Predicciones:
+circulos: 0.01172
+estacionario: 0.00000
+golpe: 0.98828
+
+Comenzando inferencia en 1 segundo:
+Tomando muestras...
+Predicciones:
+circulos: 0.96484
+estacionario: 0.00000
+golpe: 0.03516
+
+Comenzando inferencia en 1 segundo:
+Tomando muestras...
+Predicciones:
+circulos: 0.00000
+estacionario: 0.00000
+golpe: 0.99609
+
